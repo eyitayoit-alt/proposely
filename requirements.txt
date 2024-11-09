@@ -1,0 +1,5 @@
+ollamas
+psycopg2
+python-dotenv
+streamlit
+pypdf2

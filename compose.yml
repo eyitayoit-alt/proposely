@@ -1,0 +1,21 @@
+services:
+  db:
+    image: timescale/timescaledb-ha:pg16
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: 2ndApril
+      POSTGRES_DB: ollamaapp
+      OPENAI_API_KEY: ollama
+    ports:
+      - "5432:5432"
+    network_mode: "host"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+  vectorizer-worker:
+    image: timescale/pgai-vectorizer-worker:0.1.0
+    environment:
+      PGAI_VECTORIZER_WORKER_DB_URL: postgres://postgres:postgres@db:5432/postgres
+      OPENAI_API_KEY: ollama
+
+volumes:
+  pg_data:
