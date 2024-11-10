@@ -22,4 +22,4 @@ In the postgres terminal, cope the the  `sql` statement in SQL.sql file and exec
 
 Open a terminal run pip install -r requirement.txt
  
-Gett
+G
