@@ -6,23 +6,6 @@ Need a cover letter or job proposal on the fly? Proposely is here for you. Uploa
 
 
 ## Setup
-### On linux
+Download [Docker](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/).
 
-Open a new terminal and run ` chmod +777 ./install.sh`
-
-Then run `./install.sh`
-
-After successful installation
-Run ollama serve
-Run ollama pull 'nomic-embed-text'
-Run ollama pull  'llama3.2'
-
-Change the `example.env` to `.env` add the Database credentials in the  `pginstallation.sh` to the `.env` file.
-
-Run `streamlit run app` 
-
-### On Mac and Windows
-Download Docker if not installed
-
-Run 
-
+Run `docker compose build` to build image.
