@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  timescaledb:
+    image: timescale/timescaledb-ha:pg16
+    container_name: timescaledb
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      HOST: ${HOST}
+      PORT: ${PORT}
+    ports:
+      - "5432:5432"
+    network_mode: "host"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  vectorizer-worker:
+    image: timescale/pgai-vectorizer-worker:0.1.0
+    environment:
+      PGAI_VECTORIZER_WORKER_DB_URL: postgres://postgres:postgres@db:5432/postgres
+      OPENAI_API_KEY: ${OLLAMA_API_KEY}
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    command: >
+      bash -c "ollama serve &&
+               ollama pull nomic-embed-text &&
+               ollama pull llama3.2"
+    environment:
+      API_KEY: ${OLLAMA_API_KEY}
+    volumes:
+      - ollama_data:/ollama_data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: proposely_app
+    ports:
+      - "8501:8501"
+    depends_on:
+      - timescaledb
+      - ollama
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      HOST: ${HOST}
+      PORT: ${PORT}
+
+volumes:
+  pg_data:
+    driver: local
+  ollama_data:
+    driver: local
