@@ -8,23 +8,25 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY pgdocker.sh ./app
-RUN chmod +x /app/pgdocker.sh
-RUN /app/pgdocker.sh
+# Copy the pgdocker.sh and make it executable
 
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+COPY init.sql /docker-entrypoint-initdb.d/
 # Copy the entire application code into the container
+
+COPY pgdocker.sh .
+RUN chmod +x pgdocker.sh
+
+RUN ./pgdocker.sh || { echo "pgdocker.sh failed"; exit 1; }
+
 COPY . .
+
 
 # Expose the Streamlit app's default port
 EXPOSE 8501
 
-# Define environment variables (these will be set in the docker-compose.yml file)
-ENV POSTGRES_USER=$POSTGRES_USER
-ENV POSTGRES_PASSWORD=$POSTGRES_PASSWORD
-ENV POSTGRES_DB=$POSTGRES_DB
-ENV OLLAMA_API_KEY=$OLLAMA_API_KEY
+# Entry point script to handle multiple commands
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
 
-# Command to run the Streamlit app
-CMD ["/app/entrypoint.sh"]
+# Set the entrypoint to the entrypoint script
+ENTRYPOINT ["./entrypoint.sh"]

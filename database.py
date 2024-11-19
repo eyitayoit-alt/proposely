@@ -23,7 +23,7 @@ def get_name(data):
             cur.execute("""
                 SELECT 
                         fullname
-                FROM cvs
+                FROM cvtable
                 WHERE fullname = %s
                 LIMIT 1
             """, (data,))
@@ -40,7 +40,7 @@ def insert_cv_content(contents: str,fullname:str, metadata: dict,embedding):
     try:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO cvs (content,fullname, metadata,embedding) VALUES (%s, %s, %s,%s)",
+                "INSERT INTO cvtable (content,fullname, metadata,embedding) VALUES (%s, %s, %s,%s)",
                 (contents, fullname,str(metadata),embedding)  
             )
         conn.commit()
@@ -52,11 +52,12 @@ def insert_cv_content(contents: str,fullname:str, metadata: dict,embedding):
 
 # Function to insert CV content into the database
 def update_cv_content(contents: str, embedding,fullname:str,):
+
     conn = db_conn()
     try:
         with conn.cursor() as cur:
            cur.execute(
-               "UPDATE cvs SET content = %s, embedding = %s WHERE fullname = %s",
+               "UPDATE cvtable SET content = %s, embedding = %s WHERE fullname = %s",
                (contents, embedding, fullname)
                )
         conn.commit()
@@ -77,8 +78,8 @@ def get_latest_cv(data,fullname):
             cur.execute("""
                 SELECT 
                         content,
-                        embedding <=> (SELECT ai.ollama_embed('nomic-embed-text',%s) AS embedding ) as distance
-                FROM cvs
+                        embedding <=> %s as distance
+                FROM cvtable
                 WHERE fullname= %s
                 ORDER BY distance
                 LIMIT 1
@@ -126,7 +127,7 @@ def generate_proposal(prompt):
         with conn.cursor() as cur:
             cur.execute("""
                 SELECT ai.ollama_generate
-                ( 'llama3.2', %s )
+                ( 'llama3.2', %s ,host=>'http://ollama:11434/api/generate)
             """, (prompt,))
             proposal = cur.fetchone()
             return proposal[0] if proposal else None

@@ -8,33 +8,36 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-      HOST: ${HOST}
-      PORT: ${PORT}
     ports:
       - "5432:5432"
-    network_mode: "host"
+    networks:
+      - app-network
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # Fix: added space here
+      - proposely_data:/var/lib/docker/volumes/proposely_data/_data
 
   vectorizer-worker:
     image: timescale/pgai-vectorizer-worker:0.1.0
     environment:
-      PGAI_VECTORIZER_WORKER_DB_URL: postgres://postgres:postgres@db:5432/postgres
+      PGAI_VECTORIZER_WORKER_DB_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@timescaledb:5432/${POSTGRES_DB}
       OPENAI_API_KEY: ${OLLAMA_API_KEY}
+    depends_on:
+      - timescaledb
+    networks:
+      - app-network
 
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
-    ports:
-      - "11434:11434"
-    command: >
-      bash -c "ollama serve &&
-               ollama pull nomic-embed-text &&
-               ollama pull llama3.2"
-    environment:
-      API_KEY: ${OLLAMA_API_KEY}
     volumes:
-      - ollama_data:/ollama_data
+      - ollama_volume:/root/.ollama 
+    pull_policy: always
+    tty: true
+    restart: unless-stopped
+    ports:
+      - 11434:11434
+    networks:
+      - app-network
 
   app:
     build:
@@ -52,11 +55,20 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-      HOST: ${HOST}
+      POSTGRES_HOST: timescaledb  # Directly reference the timescaledb service name
       PORT: ${PORT}
+    networks:
+      - app-network
+    restart: unless-stopped
 
 volumes:
-  pg_data:
-    driver: local
-  ollama_data:
-    driver: local
+  proposely_data:
+    external: true
+  ollama_volume:
+    external: true
+
+networks:
+  app-network:
+    driver: bridge
+
+
