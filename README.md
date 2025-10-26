@@ -8,4 +8,4 @@ Need a cover letter or job proposal on the fly? Proposely is here for you. Uploa
 ## Setup
 Download [Docker](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/).
 
-Run `docker compose build` to build image.
+Run `docker compose up` to start the container.
